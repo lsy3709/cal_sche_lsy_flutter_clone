@@ -7,7 +7,8 @@ import '../const/colors.dart';
 
 
 class HomeScreen extends StatefulWidget {  // ➊ StatelessWidget에서 StatefulWidget으로 전환
-  const HomeScreen({Key? key}) : super(key: key);
+  // const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -30,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
             context: context,
             isDismissible: true,  // ➌ 배경 탭했을 때 BottomSheet 닫기
             isScrollControlled: true,
-            builder: (_) => ScheduleBottomSheet(),
+            builder: (_) => const ScheduleBottomSheet(),
           );
         },
-        child: Icon(
+        child: const Icon(
           Icons.add,
         ),
       ),
@@ -46,16 +47,24 @@ class _HomeScreenState extends State<HomeScreen> {
               // 날짜가 선택됐을 때 실행할 함수
               onDaySelected: onDaySelected,
             ),
-            SizedBox(height: 8.0),
+            // 달력과, 배너 사이 공간 8 간격 주기
+            const SizedBox(height: 8.0),
             TodayBanner(  // ➊ 배너 추가하기
               selectedDate: selectedDate,
               count: 0,
             ),
-            SizedBox(height: 8.0),
-            ScheduleCard(  // ➊ 구현해둔 일정 카드
+          // 사이 공간 8 간격 주기
+            const SizedBox(height: 8.0),
+            const ScheduleCard(  // ➊ 구현해둔 일정 카드
               startTime: 12,
               endTime: 14,
               content: '프로그래밍 공부',
+            ),
+            const SizedBox(height: 8.0),
+            const ScheduleCard(  // ➊ 구현해둔 일정 카드
+              startTime: 14,
+              endTime: 16,
+              content: '프로그래밍 공부2',
             ),
           ],
         ),

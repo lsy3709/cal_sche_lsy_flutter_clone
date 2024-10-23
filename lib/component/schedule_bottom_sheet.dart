@@ -5,7 +5,8 @@ import 'custom_text_field.dart';
 
 
 class ScheduleBottomSheet extends StatefulWidget {
-  const ScheduleBottomSheet({Key? key}) : super(key: key);
+  // const ScheduleBottomSheet({Key? key}) : super(key: key);
+  const ScheduleBottomSheet({super.key});
 
   @override
   State<ScheduleBottomSheet> createState() => _ScheduleBottomSheetState();
@@ -27,18 +28,24 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
           child: Column(
             // ➋ 시간 관련 텍스트 필드와 내용관련 텍스트 필드 세로로 배치
             children: [
-              Row(
+              // Row(
+              const Row(
                 // ➊ 시작 시간 종료 시간 가로로 배치
                 children: [
+                  // 자식 위젯이 , 부모 위젯 안에서 가득 채우는 기능
+                  // flex 속성으로 비율로 가능. , 1:3 이런식으로
                   Expanded(
+                    flex: 1,
                     child: CustomTextField(
                       // 시작시간 입력 필드
                       label: '시작 시간',
                       isTime: true,
                     ),
                   ),
-                  const SizedBox(width: 16.0),
+                  // const SizedBox(width: 16.0),
+                  SizedBox(width: 16.0),
                   Expanded(
+                    flex: 1,
                     child: CustomTextField(
                       // 종료시간 입력 필드
                       label: '종료 시간',
@@ -48,7 +55,8 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                 ],
               ),
               SizedBox(height: 8.0),
-              Expanded(
+      // Expanded(
+              const Expanded(
                 child: CustomTextField(
                   // 내용 입력 필드
                   label: '내용',
@@ -64,7 +72,8 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: PRIMARY_COLOR,
                   ),
-                  child: Text('저장'),
+                  // child: Text('저장'),
+                  child: const Text('저장'),
                 ),
               ),
             ],

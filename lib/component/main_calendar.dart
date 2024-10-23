@@ -8,7 +8,8 @@ class MainCalendar extends StatelessWidget {
   final OnDaySelected onDaySelected; // ➊ 날짜 선택 시 실행할 함수
   final DateTime selectedDate; // ➋ 선택된 날짜
 
-  MainCalendar({
+  // MainCalendar({
+  const MainCalendar({super.key,
     required this.onDaySelected,
     required this.selectedDate,
   });
@@ -26,7 +27,7 @@ class MainCalendar extends StatelessWidget {
       firstDay: DateTime(1800, 1, 1),  // ➊ 첫째 날
       lastDay: DateTime(3000, 1, 1),   // ➋ 마지막 날
       focusedDay: DateTime.now(),
-      headerStyle: HeaderStyle(  // ➊ 달력 최상단 스타일
+      headerStyle: const HeaderStyle(  // ➊ 달력 최상단 스타일
         titleCentered: true,  // 제목 중앙에 위치하기
         formatButtonVisible: false,  // 달력 크기 선택 옵션 없애기
         titleTextStyle: TextStyle(  // 제목 글꼴
@@ -48,7 +49,7 @@ class MainCalendar extends StatelessWidget {
           borderRadius: BorderRadius.circular(6.0),
           border: Border.all(
             color: PRIMARY_COLOR,
-            width: 1.0,
+            width: 2.0,
           ),
         ),
         defaultTextStyle: TextStyle(  // ➎ 기본 글꼴
@@ -59,7 +60,7 @@ class MainCalendar extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: DARK_GREY_COLOR,
         ),
-        selectedTextStyle: TextStyle(  // ➐ 선택된 날짜 글꼴
+        selectedTextStyle: const TextStyle(  // ➐ 선택된 날짜 글꼴
           fontWeight: FontWeight.w600,
           color: PRIMARY_COLOR,
         ),
