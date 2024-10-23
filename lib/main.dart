@@ -1,7 +1,10 @@
 
 import 'package:calendar_scheduler_lsy/screen/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import 'database/drift_database.dart';
 
 void main() async {
   //Flutter에서 위젯 트리나 앱 초기화를 수행할 때,
@@ -18,6 +21,10 @@ void main() async {
   // 해당 지역에 맞는 날짜 형식 설정이 필요할 수 있습니다.
   // 이 함수는 날짜 형식을 위한 지역화 데이터를 초기화해줌
   await initializeDateFormatting();
+
+  final database = LocalDatabase();  // ➊ 데이터베이스 생성
+
+  GetIt.I.registerSingleton<LocalDatabase>(database);  // ➋ GetIt에
 
   runApp(
     MaterialApp(
