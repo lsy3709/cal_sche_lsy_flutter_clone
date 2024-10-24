@@ -52,16 +52,20 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             MainCalendar(
               selectedDate: selectedDate, // 선택된 날짜 전달하기
-
               // 날짜가 선택됐을 때 실행할 함수
               onDaySelected: onDaySelected,
             ),
+
             // 달력과, 배너 사이 공간 8 간격 주기
             const SizedBox(height: 8.0),
-            TodayBanner(
-              // ➊ 배너 추가하기
-              selectedDate: selectedDate,
-              count: 0,
+            StreamBuilder<List<Schedule>>(
+                stream: GetIt.I<LocalDatabase>().watchSchedules(selectedDate),
+                builder: (context, snapshot) {
+                  return TodayBanner(
+                    selectedDate: selectedDate,
+                    count: snapshot.data?.length ?? 0,
+                  );
+                }
             ),
             // 사이 공간 8 간격 주기
             const SizedBox(height: 8.0),
@@ -97,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Dismissible(
                         key: ObjectKey(schedule.id),
                         // ➊ 유니크한 키값
-                        direction: DismissDirection.startToEnd,
+                        direction: DismissDirection.endToStart,
                         // ➋ 밀기 방향 (오른쪽에서 왼쪽으로)
                         onDismissed: (DismissDirection direction) {
                           // ➌ 밀기 했을 때 실행할 함수
