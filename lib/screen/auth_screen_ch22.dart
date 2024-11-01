@@ -39,9 +39,9 @@
 //                 backgroundColor: SECONDARY_COLOR,
 //               ),
 //               child: Text(
-//                   '구글 로그인',
-//                   style: TextStyle(color: Colors.white), // 텍스트 색상을 명시적으로 흰색으로 설정
-//                 ),
+//                 '구글 로그인',
+//                 style: TextStyle(color: Colors.white), // 텍스트 색상을 명시적으로 흰색으로 설정
+//               ),
 //             ),
 //           ],
 //         ),
@@ -58,7 +58,10 @@
 //
 //     try {
 //       GoogleSignInAccount? account = await googleSignIn.signIn();
+//       print("account");
+//       print(account);
 //
+//       //2
 //       final GoogleSignInAuthentication? googleAuth = await account?.authentication;
 //
 //       final credential = GoogleAuthProvider.credential(

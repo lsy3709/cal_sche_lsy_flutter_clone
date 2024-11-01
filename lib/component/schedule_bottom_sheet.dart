@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../const/colors.dart';
 import '../model/schedule_model.dart';
 import 'custom_text_field.dart';
@@ -118,31 +117,12 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
         endTime: endTime!,
       );
 
-      final user = FirebaseAuth.instance.currentUser;
+      // Supabase 인스턴스 불러오기
+      final supabase = Supabase.instance.client;
 
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('다시 로그인을 해주세요.'),
-          ),
-        );
-
-        Navigator.of(context).pop();
-
-        return;
-      }
-
-      // ➋ 스케쥴 모델 파이어스토어에 삽입하기
-      await FirebaseFirestore.instance
-          .collection(
-        'schedule',
-      )
-          .doc(schedule.id)
-          .set(
-        {
-          ...schedule.toJson(),
-          'author': user.email,
-        },
+      // Supabase schedule 테이블에 데이터 삽입
+      await supabase.from('schedule').insert(
+        schedule.toJson(),
       );
 
       Navigator.of(context).pop();

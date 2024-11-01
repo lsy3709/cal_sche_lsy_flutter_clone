@@ -1,9 +1,10 @@
+// import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
+// import 'package:uuid/uuid.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 //
 // import '../const/colors.dart';
 // import '../model/schedule_model.dart';
-// import '../provider/schedule_provider.dart';
 // import 'custom_text_field.dart';
 //
 // class ScheduleBottomSheet extends StatefulWidget {
@@ -34,12 +35,10 @@
 //       key: formKey, // ➋ Form을 조작할 키값
 //       child: SafeArea(
 //         child: Container(
-//           height: MediaQuery.of(context).size.height / 2 +
-//               bottomInset, // ➋ 화면 반 높이에 키보드 높이 추가하기
+//           height: MediaQuery.of(context).size.height / 2 + bottomInset, // ➋ 화면 반 높이에 키보드 높이 추가하기
 //           color: Colors.white,
 //           child: Padding(
-//             padding:
-//             EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomInset),
+//             padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomInset),
 //             child: Column(
 //               // ➋ 시간 관련 텍스트 필드와 내용관련 텍스트 필드 세로로 배치
 //               children: [
@@ -106,22 +105,48 @@
 //     );
 //   }
 //
-//   void onSavePressed(BuildContext context) async {    if (formKey.currentState!.validate()) {
-//     // ➊ 폼 검증하기
-//     formKey.currentState!.save(); // ➋ 폼 저장하기
+//   void onSavePressed(BuildContext context) async {
+//     if (formKey.currentState!.validate()) {
+//       // ➊ 폼 검증하기
+//       formKey.currentState!.save(); // ➋ 폼 저장하기
 //
-//     context.read<ScheduleProvider>().createSchedule(
-//       schedule: ScheduleModel(
-//         id: 'new_model',  // ➊ 임시 ID
+//       final schedule = ScheduleModel(
+//         id: Uuid().v4(),
 //         content: content!,
 //         date: widget.selectedDate,
 //         startTime: startTime!,
 //         endTime: endTime!,
-//       ),
-//     );
+//       );
 //
-//     Navigator.of(context).pop();
-//   }
+//       final user = FirebaseAuth.instance.currentUser;
+//
+//       if (user == null) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text('다시 로그인을 해주세요.'),
+//           ),
+//         );
+//
+//         Navigator.of(context).pop();
+//
+//         return;
+//       }
+//
+//       // ➋ 스케쥴 모델 파이어스토어에 삽입하기
+//       await FirebaseFirestore.instance
+//           .collection(
+//         'schedule',
+//       )
+//           .doc(schedule.id)
+//           .set(
+//         {
+//           ...schedule.toJson(),
+//           'author': user.email,
+//         },
+//       );
+//
+//       Navigator.of(context).pop();
+//     }
 //   }
 //
 //   String? timeValidator(String? val) {

@@ -1,10 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../const/colors.dart';
-import 'home_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';//
+import '../const/colors.dart';//
+import 'home_screen.dart'; //
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -40,7 +39,10 @@ class _AuthScreenState extends State<AuthScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: SECONDARY_COLOR,
               ),
-              child: Text('구글로 로그인'),
+              child: Text(
+                '구글 로그인',
+                style: TextStyle(color: Colors.white), // 텍스트 색상을 명시적으로 흰색으로 설정
+              ),
             ),
           ],
         ),
@@ -53,8 +55,8 @@ class _AuthScreenState extends State<AuthScreen> {
       scopes: [
         'email',
       ],
-      clientId: 'iOS Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
-      serverClientId: 'Web Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
+      // clientId: 'iOS Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
+      // serverClientId: 'Web Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
     );
 
     try {

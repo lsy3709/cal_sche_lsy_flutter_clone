@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../component/main_calendar.dart';
 import '../component/schedule_bottom_sheet.dart';
 import '../component/schedule_card.dart';
@@ -23,12 +22,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final future = Supabase.instance.client.from('schedule').select<List<Map<String, dynamic>>>().eq('date',
+        '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}');
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         // ➊ 새 일정 버튼
         backgroundColor: PRIMARY_COLOR,
-        onPressed: () {
-          showModalBottomSheet(
+        onPressed: () async {
+          await showModalBottomSheet(
             // ➋ BottomSheet 열기
             context: context,
             isDismissible: true, // ➌ 배경 탭했을 때 BottomSheet 닫기
@@ -37,6 +39,8 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedDate: selectedDate, // 선택된 날짜 (selectedDate) 넘겨주기
             ),
           );
+
+          setState(() {});
         },
         child: Icon(
           Icons.add,
@@ -54,41 +58,23 @@ class _HomeScreenState extends State<HomeScreen> {
               onDaySelected: (selectedDate, focusedDate) => onDaySelected(selectedDate, focusedDate, context),
             ),
             SizedBox(height: 8.0),
-            StreamBuilder<QuerySnapshot>(
+            FutureBuilder<List<Map<String, dynamic>>>(
               // ListView에 적용했던 같은 쿼리
-              stream: FirebaseFirestore.instance
-                  .collection(
-                'schedule',
-              )
-                  .where(
-                'date',
-                isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, "0")}${selectedDate.day.toString().padLeft(2, "0")}',
-              )
-                  .where('author', isEqualTo: FirebaseAuth.instance.currentUser!.email)
-                  .snapshots(),
+              future: future,
               builder: (context, snapshot) {
                 return TodayBanner(
                   selectedDate: selectedDate,
 
                   // ➊ 개수 가져오기
-                  count: snapshot.data?.docs.length ?? 0,
+                  count: snapshot.data?.length ?? 0,
                 );
               },
             ),
             SizedBox(height: 8.0),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
                 // ➊ 파이어스토어로부터 일정 정보 받아오기
-                stream: FirebaseFirestore.instance
-                    .collection(
-                  'schedule',
-                )
-                    .where(
-                  'date',
-                  isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, "0")}${selectedDate.day.toString().padLeft(2, "0")}',
-                )
-                    .where('author', isEqualTo: FirebaseAuth.instance.currentUser!.email)
-                    .snapshots(),
+                future: future,
                 builder: (context, snapshot) {
                   // Stream을 가져오는 동안 에러가 났을 때 보여줄 화면
                   if (snapshot.hasError) {
@@ -98,14 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
 
                   // 로딩 중일 때 보여줄 화면
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
                     return Container();
                   }
 
                   // ➋ ScheduleModel로 데이터 매핑하기
-                  final schedules = snapshot.data!.docs
+                  final schedules = snapshot.data!
                       .map(
-                        (QueryDocumentSnapshot e) => ScheduleModel.fromJson(json: (e.data() as Map<String, dynamic>)),
+                        (e) => ScheduleModel.fromJson(json: e),
                   )
                       .toList();
 
@@ -117,8 +103,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Dismissible(
                         key: ObjectKey(schedule.id),
                         direction: DismissDirection.startToEnd,
-                        onDismissed: (DismissDirection direction) {
-                          FirebaseFirestore.instance.collection('schedule').doc(schedule.id).delete();
+                        onDismissed: (DismissDirection direction) async{
+                          await Supabase.instance.client.from('schedule').delete().match({
+                            'id': schedule.id,
+                          });
+
+                          setState(() {});
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),

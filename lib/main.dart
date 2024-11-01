@@ -14,8 +14,6 @@ void main() async {
   );
 
   await Supabase.initialize(
-    url: 'Project URL 입력',
-    anonKey:'API Key 입력',
     // url: 'Project URL 입력',
     // anonKey:'API Key 입력',
   );

@@ -1,12 +1,12 @@
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
 // import '../component/main_calendar.dart';
 // import '../component/schedule_bottom_sheet.dart';
 // import '../component/schedule_card.dart';
 // import '../component/today_banner.dart';
 // import '../const/colors.dart';
-// import '../model/schedule_model.dart';
-// import '../provider/schedule_provider.dart'; // ➊ Provider 불러오기
+// import '../model/schedule_model.dart'; // ➊ Provider 불러오기
 //
 // class HomeScreen extends StatefulWidget {
 //   @override
@@ -22,19 +22,7 @@
 //   );
 //
 //   @override
-//   void initState() {
-//     super.initState();
-//
-//     final provider = context.read<ScheduleProvider>(); // ➋ 프로바이더 변경이 있을 때마다 build() 함수 재실행
-//     provider.getSchedules(date: selectedDate);
-//   }
-//
-//   @override
 //   Widget build(BuildContext context) {
-//     final provider = context.watch<ScheduleProvider>(); // ➋ 프로바이더 변경이 있을 때마다 build() 함수 재실행
-//     final selectedDate = provider.selectedDate; // ➌ 선택된 날짜 가져오기
-//     final schedules = provider.cache[selectedDate] ?? [];
-//
 //     return Scaffold(
 //       floatingActionButton: FloatingActionButton(
 //         // ➊ 새 일정 버튼
@@ -66,32 +54,82 @@
 //               onDaySelected: (selectedDate, focusedDate) => onDaySelected(selectedDate, focusedDate, context),
 //             ),
 //             SizedBox(height: 8.0),
-//             TodayBanner(
-//               // ➊ 배너 추가하기
-//               selectedDate: selectedDate,
-//               count: 0,
+//             StreamBuilder<QuerySnapshot>(
+//               // ListView에 적용했던 같은 쿼리
+//               stream: FirebaseFirestore.instance
+//                   .collection(
+//                 'schedule',
+//               )
+//                   .where(
+//                 'date',
+//                 isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, "0")}${selectedDate.day.toString().padLeft(2, "0")}',
+//               )
+//                   .where('author', isEqualTo: FirebaseAuth.instance.currentUser!.email)
+//                   .snapshots(),
+//               builder: (context, snapshot) {
+//                 return TodayBanner(
+//                   selectedDate: selectedDate,
+//
+//                   // ➊ 개수 가져오기
+//                   count: snapshot.data?.docs.length ?? 0,
+//                 );
+//               },
 //             ),
 //             SizedBox(height: 8.0),
 //             Expanded(
-//               child: ListView.builder(
-//                 itemCount: schedules.length,
-//                 itemBuilder: (context, index) {
-//                   final schedule = schedules[index];
+//               child: StreamBuilder<QuerySnapshot>(
+//                 // ➊ 파이어스토어로부터 일정 정보 받아오기
+//                 stream: FirebaseFirestore.instance
+//                     .collection(
+//                   'schedule',
+//                 )
+//                     .where(
+//                   'date',
+//                   isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, "0")}${selectedDate.day.toString().padLeft(2, "0")}',
+//                 )
+//                     .where('author', isEqualTo: FirebaseAuth.instance.currentUser!.email)
+//                     .snapshots(),
+//                 builder: (context, snapshot) {
+//                   // Stream을 가져오는 동안 에러가 났을 때 보여줄 화면
+//                   if (snapshot.hasError) {
+//                     return Center(
+//                       child: Text('일정 정보를 가져오지 못했습니다.'),
+//                     );
+//                   }
 //
-//                   return Dismissible(
-//                     key: ObjectKey(schedule.id),
-//                     direction: DismissDirection.startToEnd,
-//                     onDismissed: (DismissDirection direction) {
-//                       provider.deleteSchedule(date: selectedDate, id: schedule.id); // ➊
+//                   // 로딩 중일 때 보여줄 화면
+//                   if (snapshot.connectionState == ConnectionState.waiting) {
+//                     return Container();
+//                   }
+//
+//                   // ➋ ScheduleModel로 데이터 매핑하기
+//                   final schedules = snapshot.data!.docs
+//                       .map(
+//                         (QueryDocumentSnapshot e) => ScheduleModel.fromJson(json: (e.data() as Map<String, dynamic>)),
+//                   )
+//                       .toList();
+//
+//                   return ListView.builder(
+//                     itemCount: schedules.length,
+//                     itemBuilder: (context, index) {
+//                       final schedule = schedules[index];
+//
+//                       return Dismissible(
+//                         key: ObjectKey(schedule.id),
+//                         direction: DismissDirection.startToEnd,
+//                         onDismissed: (DismissDirection direction) {
+//                           FirebaseFirestore.instance.collection('schedule').doc(schedule.id).delete();
+//                         },
+//                         child: Padding(
+//                           padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
+//                           child: ScheduleCard(
+//                             startTime: schedule.startTime,
+//                             endTime: schedule.endTime,
+//                             content: schedule.content,
+//                           ),
+//                         ),
+//                       );
 //                     },
-//                     child: Padding(
-//                       padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
-//                       child: ScheduleCard(
-//                         startTime: schedule.startTime,
-//                         endTime: schedule.endTime,
-//                         content: schedule.content,
-//                       ),
-//                     ),
 //                   );
 //                 },
 //               ),
@@ -107,10 +145,8 @@
 //       DateTime focusedDate,
 //       BuildContext context,
 //       ) {
-//     final provider = context.read<ScheduleProvider>();
-//     provider.changeSelectedDate(
-//       date: selectedDate,
-//     );
-//     provider.getSchedules(date: selectedDate);
+//     setState(() {
+//       this.selectedDate = selectedDate;
+//     });
 //   }
 // }
