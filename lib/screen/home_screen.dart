@@ -58,17 +58,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 8.0),
             StreamBuilder<QuerySnapshot>(
-
               // ListView에 적용했던 같은 쿼리
               stream: FirebaseFirestore.instance
                   .collection(
-                'schedule',
-              )
+                    'schedule',
+                  )
                   .where(
-                'date',
-                isEqualTo:
-                '${selectedDate.year}${selectedDate.month}${selectedDate.day}',
-              )
+                    'date',
+                    isEqualTo:
+                        '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}',
+                  )
                   .snapshots(),
               builder: (context, snapshot) {
                 return TodayBanner(
@@ -89,8 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                     .where(
                       'date',
-                      isEqualTo:
-                          '${selectedDate.year}${selectedDate.month}${selectedDate.day}',
+                  isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}',
                     )
                     .snapshots(),
                 builder: (context, snapshot) {
