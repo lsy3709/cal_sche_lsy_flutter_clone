@@ -5,7 +5,9 @@ import '../model/schedule_model.dart';
 
 class ScheduleRepository {
   final _dio = Dio();
-  final _targetUrl = 'http://${Platform.isAndroid ? '192.168.219.200' : 'localhost'}:3000/schedule';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
+  final _targetUrl = 'http://${Platform.isAndroid ? '10.100.201.87' : 'localhost'}:3000/schedule';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
+  // final _targetUrl = 'http://${Platform.isAndroid ? '192.168.219.200' : 'localhost'}:3000/schedule';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
+
 
   // 샘플 , http://localhost:3000/schedule?date=20220102
   Future<List<ScheduleModel>> getSchedules({
