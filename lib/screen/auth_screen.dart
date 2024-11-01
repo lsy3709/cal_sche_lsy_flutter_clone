@@ -1,19 +1,21 @@
-
-
-import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
-
-import '../component/login_text_field.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../const/colors.dart';
-import '../provider/schedule_provider.dart';
 import 'home_screen.dart';
 
-class AuthScreen extends StatelessWidget {
+class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
+
+  @override
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  String email = '';
+  String password = '';
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +40,7 @@ class AuthScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: SECONDARY_COLOR,
               ),
-              child: Text(
-                  '구글 로그인',
-                  style: TextStyle(color: Colors.white), // 텍스트 색상을 명시적으로 흰색으로 설정
-                ),
+              child: Text('구글로 로그인'),
             ),
           ],
         ),
@@ -54,22 +53,24 @@ class AuthScreen extends StatelessWidget {
       scopes: [
         'email',
       ],
+      clientId: 'iOS Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
+      serverClientId: 'Web Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
     );
 
     try {
       GoogleSignInAccount? account = await googleSignIn.signIn();
-      print("account");
-      print(account);
 
-      //2
       final GoogleSignInAuthentication? googleAuth = await account?.authentication;
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
-      );
+      if (googleAuth == null || googleAuth.idToken == null || googleAuth.accessToken == null) {
+        throw Exception('로그인 실패');
+      }
 
-      final result = await FirebaseAuth.instance.signInWithCredential(credential);
+      await Supabase.instance.client.auth.signInWithIdToken(
+        provider: Provider.google,
+        idToken: googleAuth.idToken!,
+        accessToken: googleAuth.accessToken!,
+      );
 
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -77,6 +78,7 @@ class AuthScreen extends StatelessWidget {
         ),
       );
     } catch (error) {
+      print(error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('로그인 실패')),
       );
