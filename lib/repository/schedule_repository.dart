@@ -9,17 +9,22 @@ class ScheduleRepository {
 
   // 샘플 , http://localhost:3000/schedule?date=20220102
   Future<List<ScheduleModel>> getSchedules({
+    required String accessToken,
     required DateTime date,
   }) async {
     final resp = await _dio.get(
       _targetUrl,
-      queryParameters: {  // ➊ Query Parameter
-        'date':
-        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}',
+      queryParameters: {
+        'date': '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}',
       },
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $accessToken',
+        },
+      ),
     );
 
-    return resp.data  // ➋ 모델 인스턴스로 데이터 매핑하기
+    return resp.data
         .map<ScheduleModel>(
           (x) => ScheduleModel.fromJson(
         json: x,
@@ -29,22 +34,40 @@ class ScheduleRepository {
   }
 
   Future<String> createSchedule({
+    required String accessToken,
     required ScheduleModel schedule,
   }) async {
     final json = schedule.toJson();
 
-    final resp = await _dio.post(_targetUrl, data: json);
+    final resp = await _dio.post(
+      _targetUrl,
+      data: json,
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $accessToken',
+        },
+      ),
+    );
 
     return resp.data?['id'];
   }
 
   Future<String> deleteSchedule({
+    required String accessToken,
     required String id,
   }) async {
-    final resp = await _dio.delete(_targetUrl, data: {
-      'id': id,  // 삭제할 ID값
-    });
+    final resp = await _dio.delete(
+      _targetUrl,
+      data: {
+        'id': id,
+      },
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $accessToken',
+        },
+      ),
+    );
 
-    return resp.data?['id'];  // 삭제된 ID값 반환
+    return resp.data?['id'];
   }
 }
