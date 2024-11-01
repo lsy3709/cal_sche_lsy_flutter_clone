@@ -62,20 +62,20 @@ class AuthScreen extends StatelessWidget {
       print(account);
 
       //2
-      // final GoogleSignInAuthentication? googleAuth = await account?.authentication;
-      //
-      // final credential = GoogleAuthProvider.credential(
-      //   accessToken: googleAuth?.accessToken,
-      //   idToken: googleAuth?.idToken,
-      // );
-      //
-      // final result = await FirebaseAuth.instance.signInWithCredential(credential);
-      //
-      // Navigator.of(context).push(
-      //   MaterialPageRoute(
-      //     builder: (_) => HomeScreen(),
-      //   ),
-      // );
+      final GoogleSignInAuthentication? googleAuth = await account?.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+
+      final result = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(),
+        ),
+      );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('로그인 실패')),

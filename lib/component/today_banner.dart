@@ -1,5 +1,7 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../const/colors.dart';
 
@@ -10,12 +12,12 @@ class TodayBanner extends StatelessWidget {
   const TodayBanner({
     required this.selectedDate,
     required this.count,
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    const textStyle = TextStyle(  // 기본으로 사용할 글꼴
+    final textStyle = TextStyle(  // 기본으로 사용할 글꼴
       fontWeight: FontWeight.w600,
       color: Colors.white,
     );
@@ -23,17 +25,38 @@ class TodayBanner extends StatelessWidget {
     return Container(
       color: PRIMARY_COLOR,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '${selectedDate.year}년 ${selectedDate.month.toString().padLeft(2, '0')}월 ${selectedDate.day.toString().padLeft(2, '0')}일',  // “년 월 일” 형태로 표시
-              style: textStyle,
+            Expanded(
+              child: Text(
+                '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
+                style: textStyle,
+              ),
             ),
             Text(
-              '$count개',  // 일정 개수 표시
+              '$count개',
               style: textStyle,
+            ),
+            const SizedBox(width: 8.0),
+            GestureDetector(
+              onTap: () async {
+
+
+                await GoogleSignIn().signOut();
+                // Firebase Auth 로그아웃 함수
+                await FirebaseAuth.instance.signOut();
+
+
+                // 홈 스크린으로 돌아가기
+                Navigator.of(context).pop();
+              },
+              child: Icon(
+                Icons.logout,
+                size: 16.0,
+                color: Colors.white,
+              ),
             ),
           ],
         ),

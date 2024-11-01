@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
-import 'package:provider/provider.dart';
-
 import '../component/main_calendar.dart';
 import '../component/schedule_bottom_sheet.dart';
 import '../component/schedule_card.dart';
@@ -53,21 +51,20 @@ class _HomeScreenState extends State<HomeScreen> {
               selectedDate: selectedDate, // 선택된 날짜 전달하기
 
               // 날짜가 선택됐을 때 실행할 함수
-              onDaySelected: (selectedDate, focusedDate) =>
-                  onDaySelected(selectedDate, focusedDate, context),
+              onDaySelected: (selectedDate, focusedDate) => onDaySelected(selectedDate, focusedDate, context),
             ),
             SizedBox(height: 8.0),
             StreamBuilder<QuerySnapshot>(
               // ListView에 적용했던 같은 쿼리
               stream: FirebaseFirestore.instance
                   .collection(
-                    'schedule',
-                  )
+                'schedule',
+              )
                   .where(
-                    'date',
-                    isEqualTo:
-                        '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}',
-                  )
+                'date',
+                isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, "0")}${selectedDate.day.toString().padLeft(2, "0")}',
+              )
+                  .where('author', isEqualTo: FirebaseAuth.instance.currentUser!.email)
                   .snapshots(),
               builder: (context, snapshot) {
                 return TodayBanner(
@@ -84,12 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ➊ 파이어스토어로부터 일정 정보 받아오기
                 stream: FirebaseFirestore.instance
                     .collection(
-                      'schedule',
-                    )
+                  'schedule',
+                )
                     .where(
-                      'date',
-                  isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}',
-                    )
+                  'date',
+                  isEqualTo: '${selectedDate.year}${selectedDate.month.toString().padLeft(2, "0")}${selectedDate.day.toString().padLeft(2, "0")}',
+                )
+                    .where('author', isEqualTo: FirebaseAuth.instance.currentUser!.email)
                     .snapshots(),
                 builder: (context, snapshot) {
                   // Stream을 가져오는 동안 에러가 났을 때 보여줄 화면
@@ -107,9 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   // ➋ ScheduleModel로 데이터 매핑하기
                   final schedules = snapshot.data!.docs
                       .map(
-                        (QueryDocumentSnapshot e) => ScheduleModel.fromJson(
-                            json: (e.data() as Map<String, dynamic>)),
-                      )
+                        (QueryDocumentSnapshot e) => ScheduleModel.fromJson(json: (e.data() as Map<String, dynamic>)),
+                  )
                       .toList();
 
                   return ListView.builder(
@@ -121,14 +118,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         key: ObjectKey(schedule.id),
                         direction: DismissDirection.startToEnd,
                         onDismissed: (DismissDirection direction) {
-                          FirebaseFirestore.instance
-                              .collection('schedule')
-                              .doc(schedule.id)
-                              .delete();
+                          FirebaseFirestore.instance.collection('schedule').doc(schedule.id).delete();
                         },
                         child: Padding(
-                          padding: const EdgeInsets.only(
-                              bottom: 8.0, left: 8.0, right: 8.0),
+                          padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
                           child: ScheduleCard(
                             startTime: schedule.startTime,
                             endTime: schedule.endTime,
@@ -148,10 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void onDaySelected(
-    DateTime selectedDate,
-    DateTime focusedDate,
-    BuildContext context,
-  ) {
+      DateTime selectedDate,
+      DateTime focusedDate,
+      BuildContext context,
+      ) {
     setState(() {
       this.selectedDate = selectedDate;
     });
