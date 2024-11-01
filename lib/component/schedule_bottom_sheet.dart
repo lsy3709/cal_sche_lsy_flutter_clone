@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../const/colors.dart';
 import '../model/schedule_model.dart';
-import '../provider/schedule_provider.dart';
 import 'custom_text_field.dart';
 
 class ScheduleBottomSheet extends StatefulWidget {
@@ -39,7 +39,7 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
           color: Colors.white,
           child: Padding(
             padding:
-            EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomInset),
+                EdgeInsets.only(left: 8, right: 8, top: 8, bottom: bottomInset),
             child: Column(
               // ➋ 시간 관련 텍스트 필드와 내용관련 텍스트 필드 세로로 배치
               children: [
@@ -107,21 +107,27 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
   }
 
   void onSavePressed(BuildContext context) async {    if (formKey.currentState!.validate()) {
-    // ➊ 폼 검증하기
-    formKey.currentState!.save(); // ➋ 폼 저장하기
+      // ➊ 폼 검증하기
+      formKey.currentState!.save(); // ➋ 폼 저장하기
 
-    context.read<ScheduleProvider>().createSchedule(
-      schedule: ScheduleModel(
-        id: 'new_model',  // ➊ 임시 ID
+      final schedule = ScheduleModel(
+        id: Uuid().v4(),
         content: content!,
         date: widget.selectedDate,
         startTime: startTime!,
         endTime: endTime!,
-      ),
-    );
+      );
 
-    Navigator.of(context).pop();
-  }
+      // ➋ 스케쥴 모델 파이어스토어에 삽입하기
+      await FirebaseFirestore.instance
+          .collection(
+        'schedule',
+      )
+          .doc(schedule.id)
+          .set(schedule.toJson());
+
+      Navigator.of(context).pop();
+    }
   }
 
   String? timeValidator(String? val) {

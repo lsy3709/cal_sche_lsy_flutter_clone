@@ -5,28 +5,21 @@ import '../model/schedule_model.dart';
 
 class ScheduleRepository {
   final _dio = Dio();
-  final _targetUrl = 'http://${Platform.isAndroid ? '10.100.201.87' : 'localhost'}:3000/schedule';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
-  // final _targetUrl = 'http://${Platform.isAndroid ? '192.168.219.200' : 'localhost'}:3000/schedule';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
-
+  final _targetUrl = 'http://${Platform.isAndroid ? '192.168.219.200' : 'localhost'}:3000/schedule';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
 
   // 샘플 , http://localhost:3000/schedule?date=20220102
   Future<List<ScheduleModel>> getSchedules({
-    required String accessToken,
     required DateTime date,
   }) async {
     final resp = await _dio.get(
       _targetUrl,
-      queryParameters: {
-        'date': '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}',
+      queryParameters: {  // ➊ Query Parameter
+        'date':
+        '${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}',
       },
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $accessToken',
-        },
-      ),
     );
 
-    return resp.data
+    return resp.data  // ➋ 모델 인스턴스로 데이터 매핑하기
         .map<ScheduleModel>(
           (x) => ScheduleModel.fromJson(
         json: x,
@@ -36,40 +29,22 @@ class ScheduleRepository {
   }
 
   Future<String> createSchedule({
-    required String accessToken,
     required ScheduleModel schedule,
   }) async {
     final json = schedule.toJson();
 
-    final resp = await _dio.post(
-      _targetUrl,
-      data: json,
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $accessToken',
-        },
-      ),
-    );
+    final resp = await _dio.post(_targetUrl, data: json);
 
     return resp.data?['id'];
   }
 
   Future<String> deleteSchedule({
-    required String accessToken,
     required String id,
   }) async {
-    final resp = await _dio.delete(
-      _targetUrl,
-      data: {
-        'id': id,
-      },
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $accessToken',
-        },
-      ),
-    );
+    final resp = await _dio.delete(_targetUrl, data: {
+      'id': id,  // 삭제할 ID값
+    });
 
-    return resp.data?['id'];
+    return resp.data?['id'];  // 삭제된 ID값 반환
   }
 }
