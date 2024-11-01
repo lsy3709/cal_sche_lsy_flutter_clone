@@ -7,7 +7,8 @@ import 'package:dio/dio.dart';
 
 class AuthRepository {
   final _dio = Dio();
-  final _targetUrl = 'http://${Platform.isAndroid ? '10.0.2.2' : 'localhost'}:3000/auth';
+  final _targetUrl = 'http://${Platform.isAndroid ? '10.100.201.87' : 'localhost'}:3000/auth';
+  // final _targetUrl = 'http://${Platform.isAndroid ? '192.168.219.200' : 'localhost'}:3000/auth';  // Android에서는 192.168.219.200가 localhost에 해당됩니다.
 
   Future<({String refreshToken, String accessToken})> register({
     required String email,
