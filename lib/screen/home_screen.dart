@@ -1,8 +1,19 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
 
-import '../component/custom_youtube_player.dart';
-import '../model/video_model.dart';
-import '../repository/youtube_repository.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
+
+import '../component/emoticon_sticker.dart';
+import '../component/footer.dart';
+import '../component/main_app_bar.dart';
+import '../model/sticker_model.dart';
+
 
 
 class HomeScreen extends StatefulWidget {
@@ -13,50 +24,138 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  XFile? image; // 선택한 이미지를 저장할 변수
+  Set<StickerModel> stickers = {};  // 화면에 추가된 스티커를 저장할 변수
+  String? selectedId;  // 현재 선택된 스티커의 ID
+  GlobalKey imgKey = GlobalKey();
+
+  // 미리 생성해둔 onPickImage() 함수 변경하기
+  void onPickImage() async {
+    final image = await ImagePicker()
+        .pickImage(source: ImageSource.gallery); // ➊ 갤러리에서 이미지 선택하기
+
+    setState(() {
+      this.image = image; // 선택한 이미지 변수에 저장하기
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: true, // 제목 가운데 정렬
-        title: Text(
-          '코팩튜브',
-        ),
-        backgroundColor: Colors.white,
-      ),
-      body: FutureBuilder<List<VideoModel>>(
-        future: YoutubeRepository.getVideos(), // 유튜브 영상 가져오기
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            // 에러가 있을 경우 에러 화면에 표시하기
-            return Center(
-              child: Text(
-                snapshot.error.toString(),
-              ),
-            );
-          }
-
-          if (!snapshot.hasData) {
-            // 로딩 중일 때 로딩위젯 보여주기
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          return RefreshIndicator(
-            // ➊ 새로고침 기능이 있는 위젯
-            onRefresh: () async {
-              setState(() {});
-            },
-            child: ListView(
-              physics: BouncingScrollPhysics(),
-              children: snapshot.data!
-                  .map((e) => CustomYoutubePlayer(videoModel: e))
-                  .toList(),
+      body: Stack(
+        fit: StackFit.expand,
+        // ➊ 스크린에 Body, AppBar, Footer 순서로 쌓을 준비
+        children: [
+          renderBody(),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: MainAppBar(  // ➋ AppBar 위치하기
+              onPickImage: onPickImage,
+              onSaveImage: onSaveImage,
+              onDeleteItem: onDeleteItem,
             ),
-          );
-        },
+          ),
+          if (image != null)  // ➌ image가 선택되면 Footer 위치하기
+            Positioned(  // 맨 아래에 Footer 위젯 위치하기
+              bottom: 0,
+              left: 0,  // left와 right를 모두 0을 주면 좌우로 최대 크기를 차지함
+              right: 0,
+              child: Footer(
+                onEmoticonTap: onEmoticonTap,
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  Widget renderBody() {
+    if (image != null) {
+
+      return RepaintBoundary(
+
+        // ➊ 위젯을 이미지로 저장하기 위해 사용
+        key: imgKey,
+        child: Positioned.fill(
+          child: InteractiveViewer(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.file(
+                  File(image!.path),
+                  fit: BoxFit.cover,
+                ),
+                ...stickers.map(
+                      (sticker) => Center(
+                    child: EmoticonSticker(
+                      key: ObjectKey(sticker.id),
+                      onTransform: () {
+                        onTransform(sticker.id);
+                      },
+                      imgPath: sticker.imgPath,
+                      isSelected: selectedId == sticker.id,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+
+      // ➋ 이미지 선택이 안 된 경우 이미지 선택 버튼 표시
+      return Center(
+        child: TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.grey,
+          ),
+          onPressed: onPickImage,
+          child: Text('이미지 선택하기'),
+        ),
+      );
+    }
+  }
+
+  void onEmoticonTap(int index) async {
+    setState(() {
+      stickers = {
+        ...stickers,
+        StickerModel(
+          id: Uuid().v4(), // ➊ 스티커의 고유 ID
+          imgPath: 'asset/img/emoticon_$index.png',
+        ),
+      };
+    });
+  }
+
+  void onSaveImage() async {
+    RenderRepaintBoundary boundary = imgKey.currentContext!
+        .findRenderObject() as RenderRepaintBoundary;
+    ui.Image image = await boundary.toImage(); // ➊ 바운더리를 이미지로 변경
+    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png); // ➋ byte data 형태로 형태 변경
+    Uint8List pngBytes = byteData!.buffer.asUint8List(); // ➌ Unit8List 형태로 형태 변경
+
+    await ImageGallerySaver.saveImage(pngBytes, quality: 100);
+
+    ScaffoldMessenger.of(context).showSnackBar(  // ➋ 저장 후 Snackbar 보여주기
+      SnackBar(
+        content: Text('저장되었습니다!'),
+      ),
+    );
+  }
+
+  void onDeleteItem() async {
+    setState(() {
+      stickers = stickers.where((sticker) => sticker.id != selectedId).toSet();  // ➊ 현재 선택돼 있는 스티커 삭제 후 Set로 변환
+    });
+  }
+
+  void onTransform(String id){  // 스티커가 변형될 때마다 변형 중인 스티커를 현재 선택한 스티커로 지정
+    setState(() {
+      selectedId = id;
+    });
   }
 }
