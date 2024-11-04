@@ -57,6 +57,8 @@ class _AuthScreenState extends State<AuthScreen> {
       ],
       // clientId: 'iOS Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
       // serverClientId: 'Web Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
+      clientId: 'iOS Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
+      serverClientId: 'Web Client ID 입력, 구글 클라우드 콘솔 -> 사용자 인증정보',
     );
 
     try {
