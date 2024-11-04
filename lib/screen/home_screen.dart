@@ -1,161 +1,176 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:uuid/uuid.dart';
-
-import '../component/emoticon_sticker.dart';
-import '../component/footer.dart';
-import '../component/main_app_bar.dart';
-import '../model/sticker_model.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
+  static final LatLng companyLatLng = LatLng(  // ➊ 지도 초기화 위치
+    35.156085,  // 위도
+    129.059541,  // 경도
+  );
+  static final Marker marker = Marker(
+    markerId: MarkerId('company'),
+    position: companyLatLng,
+  );
+  static final Circle circle = Circle(
+    circleId: CircleId('choolCheckCircle'),
+    center: companyLatLng, // 원의 중심이 되는 위치. LatLng값을 제공합니다.
+    fillColor: Colors.blue.withOpacity(0.5), // 원의 색상
+    radius: 100, // 원의 반지름 (미터 단위)
+    strokeColor: Colors.blue, // 원의 테두리 색
+    strokeWidth: 1, // 원의 테두리 두께
+  );
+
   const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  XFile? image; // 선택한 이미지를 저장할 변수
-  Set<StickerModel> stickers = {};  // 화면에 추가된 스티커를 저장할 변수
-  String? selectedId;  // 현재 선택된 스티커의 ID
-  GlobalKey imgKey = GlobalKey();
-
-  // 미리 생성해둔 onPickImage() 함수 변경하기
-  void onPickImage() async {
-    final image = await ImagePicker()
-        .pickImage(source: ImageSource.gallery); // ➊ 갤러리에서 이미지 선택하기
-
-    setState(() {
-      this.image = image; // 선택한 이미지 변수에 저장하기
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        // ➊ 스크린에 Body, AppBar, Footer 순서로 쌓을 준비
-        children: [
-          renderBody(),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: MainAppBar(  // ➋ AppBar 위치하기
-              onPickImage: onPickImage,
-              onSaveImage: onSaveImage,
-              onDeleteItem: onDeleteItem,
-            ),
-          ),
-          if (image != null)  // ➌ image가 선택되면 Footer 위치하기
-            Positioned(  // 맨 아래에 Footer 위젯 위치하기
-              bottom: 0,
-              left: 0,  // left와 right를 모두 0을 주면 좌우로 최대 크기를 차지함
-              right: 0,
-              child: Footer(
-                onEmoticonTap: onEmoticonTap,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+      appBar: renderAppBar(),
+      body: FutureBuilder<String>(
+          future: checkPermission(),
+          builder: (context, snapshot) {
+            // ❶ 로딩 상태
+            if (!snapshot.hasData &&
+                snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-  Widget renderBody() {
-    if (image != null) {
+            // ➋ 권한 허가된 상태
+            if(snapshot.data == '위치 권한이 허가 되었습니다.'){
 
-      return RepaintBoundary(
-
-        // ➊ 위젯을 이미지로 저장하기 위해 사용
-        key: imgKey,
-        child: Positioned.fill(
-          child: InteractiveViewer(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.file(
-                  File(image!.path),
-                  fit: BoxFit.cover,
-                ),
-                ...stickers.map(
-                      (sticker) => Center(
-                    child: EmoticonSticker(
-                      key: ObjectKey(sticker.id),
-                      onTransform: () {
-                        onTransform(sticker.id);
-                      },
-                      imgPath: sticker.imgPath,
-                      isSelected: selectedId == sticker.id,
+              // 기존 Column 위젯 관련 코드
+              return Column(
+                children: [
+                  Expanded( // 2/3만큼 공간 차지
+                    flex: 2,
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: companyLatLng,
+                        zoom: 16,
+                      ),
+                      myLocationEnabled: true,
+                      markers: Set.from([marker]),
+                      circles: Set.from([circle]),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } else {
+                  Expanded(  // 1/3만큼 공간 차지
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(  // 시계 아이콘
+                          Icons.timelapse_outlined,
+                          color: Colors.blue,
+                          size: 50.0,
+                        ),
+                        const SizedBox(height: 20.0),
+                        ElevatedButton(  // [출근하기] 버튼
+                          onPressed: () async {
+                            final curPosition = await Geolocator.getCurrentPosition();  // 현재 위치
 
-      // ➋ 이미지 선택이 안 된 경우 이미지 선택 버튼 표시
-      return Center(
-        child: TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.grey,
-          ),
-          onPressed: onPickImage,
-          child: Text('이미지 선택하기'),
-        ),
-      );
-    }
-  }
+                            final distance = Geolocator.distanceBetween(
+                              curPosition.latitude,  // 현재위치 위도
+                              curPosition.longitude,  // 현재위치 경도
+                              companyLatLng.latitude,  // 회사위치 위도
+                              companyLatLng.longitude,  // 회사위치 경도
+                            );
+                            bool canCheck =
+                                distance < 100; // 100미터 이내에 있으면 출근 가능
 
-  void onEmoticonTap(int index) async {
-    setState(() {
-      stickers = {
-        ...stickers,
-        StickerModel(
-          id: Uuid().v4(), // ➊ 스티커의 고유 ID
-          imgPath: 'asset/img/emoticon_$index.png',
-        ),
-      };
-    });
-  }
+                            showDialog(
+                              context: context,
+                              builder: (_) {
+                                return AlertDialog(
+                                  title: Text('출근하기'),
+                                  // 출근 가능 여부에 따라 다른 메시지 제공
+                                  content: Text(
+                                    canCheck ? '출근을 하시겠습니까?' : '출근할수 없는 위치입니다.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      // 취소를 누르면 false 반환
+                                      onPressed: () {
+                                        Navigator.of(context).pop(false);
+                                      },
+                                      child: Text('취소'),
+                                    ),
+                                    if (canCheck) // 출근 가능한 상태일 때만 [출근하기] 버튼 제공
+                                      TextButton(
+                                        // 출근하기를 누르면 true 반환
+                                        onPressed: () {
+                                          Navigator.of(context).pop(true);
+                                        },
+                                        child: Text('출근하기'),
+                                      ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: Text('출근하기!'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
 
-  void onSaveImage() async {
-    RenderRepaintBoundary boundary = imgKey.currentContext!
-        .findRenderObject() as RenderRepaintBoundary;
-    ui.Image image = await boundary.toImage(); // ➊ 바운더리를 이미지로 변경
-    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png); // ➋ byte data 형태로 형태 변경
-    Uint8List pngBytes = byteData!.buffer.asUint8List(); // ➌ Unit8List 형태로 형태 변경
-
-    await ImageGallerySaver.saveImage(pngBytes, quality: 100);
-
-    ScaffoldMessenger.of(context).showSnackBar(  // ➋ 저장 후 Snackbar 보여주기
-      SnackBar(
-        content: Text('저장되었습니다!'),
+            // ➌ 권한 없는 상태
+            return Center(
+              child: Text(
+                snapshot.data.toString(),
+              ),
+            );
+          }
       ),
     );
   }
 
-  void onDeleteItem() async {
-    setState(() {
-      stickers = stickers.where((sticker) => sticker.id != selectedId).toSet();  // ➊ 현재 선택돼 있는 스티커 삭제 후 Set로 변환
-    });
+  AppBar renderAppBar() {
+    // AppBar를 구현하는 함수
+    return AppBar(
+      title: Text(
+        '오늘도 출근',
+        style: TextStyle(
+          color: Colors.blue,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      backgroundColor: Colors.white,
+    );
   }
 
-  void onTransform(String id){  // 스티커가 변형될 때마다 변형 중인 스티커를 현재 선택한 스티커로 지정
-    setState(() {
-      selectedId = id;
-    });
+  Future<String> checkPermission() async {
+    final isLocationEnabled = await Geolocator.isLocationServiceEnabled();   // 위치 서비스 활성화여부 확인
+
+    if (!isLocationEnabled) {  // 위치 서비스 활성화 안 됨
+      return '위치 서비스를 활성화해주세요.';
+    }
+
+    LocationPermission checkedPermission = await Geolocator.checkPermission();  // 위치 권한 확인
+
+    if (checkedPermission == LocationPermission.denied) {  // 위치 권한 거절됨
+
+      // 위치 권한 요청하기
+      checkedPermission = await Geolocator.requestPermission();
+
+      if (checkedPermission == LocationPermission.denied) {
+        return '위치 권한을 허가해주세요.';
+      }
+    }
+
+    // 위치 권한 거절됨 (앱에서 재요청 불가)
+    if (checkedPermission == LocationPermission.deniedForever) {
+      return '앱의 위치 권한을 설정에서 허가해주세요.';
+    }
+
+    // 위 모든 조건이 통과되면 위치 권한 허가완료
+    return '위치 권한이 허가 되었습니다.';
   }
 }
