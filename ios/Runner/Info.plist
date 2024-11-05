@@ -51,5 +51,13 @@
     	<string>카메라 권한이 필요해요.</string>
     	<key>NSMicrophoneUsageDescription</key>
     	<key>마이크 권한이 필요해요.</key>
+    	<string>NSMicrophoneUsageDescription</string>
+      <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsLocalNetworking</key>
+            <true/>
+            <key>NSAllowsArbitraryLoadsInWebContent</key>
+            <true/>
+        </dict>
 </dict>
 </plist>

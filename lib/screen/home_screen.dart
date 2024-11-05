@@ -1,136 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+// URI/URL을 생성하는데 도움을 주는 클래스
+final uri = Uri.parse('https://goldmagnetsoft.com');
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+class HomeScreen extends StatelessWidget {
+  WebViewController controller = WebViewController()
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (String url){
+          print(url);
+        }
+    ))
+    ..loadRequest(uri); // ❶ 컨트롤러 변수 생성
 
-class _HomeScreenState extends State<HomeScreen> {
-  DateTime firstDay = DateTime.now();
+  HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[100],
-      body: SafeArea(
-        // ➊ 시스템 UI 피해서 UI 그리기
-        top: true,
-        bottom: false,
-        child: Column(
-          // ➋ 위, 아래 끝에 위젯 배치
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(
+        // ➊ 앱바 위젯 추가
+        // ➋ 배경색 지정
+        backgroundColor: Colors.orange,
+        // ➌ 앱 타이틀 설정
+        title: Text('Code Factory'),
+        // ➍ 가운데 정렬
+        centerTitle: true,
+        actions: [
+          IconButton(
+            // ➋ 눌렀을 때 콜백 함수 설정
+            onPressed: () {
+              // ➌ 웹뷰에서 보여줄 사이트 실행하기
+              controller.loadRequest(uri);
+            },
 
-          // 반대 축 최대 크기로 늘리기
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _DDay(
-
-              // ➎ 하트 눌렀을때 실행할 함수 전달하기
-              onHeartPressed: onHeartPressed,
-              firstDay: firstDay,
+            // ➍ 홈 버튼 아이콘 설정
+            icon: Icon(
+              Icons.home,
             ),
-            _CoupleImage(),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  void onHeartPressed(){  // ➍ 하트 눌렀을때 실행할 함수
-    showCupertinoDialog(  // ➋ 쿠퍼티노 다이얼로그 실행
-      context: context,
-      builder: (BuildContext context) {
-        return Align(  // ➊ 정렬을 지정하는 위젯
-          alignment: Alignment.bottomCenter,  // ➋ 아래 중간으로 정렬
-          child: Container(
-            color: Colors.white,  // 배경색 흰색 지정
-            height: 300,  // 높이 300 지정
-            child: CupertinoDatePicker(
-              mode: CupertinoDatePickerMode.date,
-              onDateTimeChanged: (DateTime date) {
-                setState(() {
-                  firstDay = date;
-                });
-              },
-            ),
-          ),
-        );
-      },
-      barrierDismissible: true,
-    );
-  }
-}
-
-class _DDay extends StatelessWidget {
-  final GestureTapCallback onHeartPressed;
-  final DateTime firstDay;
-
-  _DDay({
-    required this.onHeartPressed,  // ➋ 상위에서 함수 입력받기
-    required this.firstDay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final now = DateTime.now();
-
-    return Column(
-      children: [
-        const SizedBox(height: 16.0),
-        Text(
-          // 최상단 U&I 글자
-          'U&I',
-          style: textTheme.displayLarge,
-        ),
-        const SizedBox(height: 16.0),
-        Text(
-          // 두번째 글자
-          '우리 처음 만난 날',
-          style: textTheme.bodyLarge,
-        ),
-        Text(
-          // 임시로 지정한 만난 날짜
-          '${firstDay.year}.${firstDay.month}.${firstDay.day}',
-          style: textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 16.0),
-        IconButton(
-          // 하트 아이콘 버튼
-          iconSize: 60.0,
-          onPressed: onHeartPressed,
-          icon: Icon(
-            Icons.favorite,
-            color: Colors.red,
-          ),
-        ),
-        const SizedBox(height: 16.0),
-        Text(
-          // 만난 후 DDay
-          'D+${DateTime(now.year, now.month, now.day).difference(firstDay).inDays + 1}',
-          style: textTheme.displayMedium,
-        ),
-      ],
-    );
-  }
-}
-
-class _CoupleImage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      // Expanded 추가
-      child: Center(
-        // ➊ 이미지 중앙정렬
-        child: Image.asset(
-          'asset/img/middle_image.png',
-
-          // ➋ 화면의 반만큼 높이 구현
-          height: MediaQuery.of(context).size.height / 2,
-        ),
+      body: WebViewWidget(
+        // ❷ WebView 추가하기
+        controller: controller,
+        // initialUrl: 'https://blog.codefactory.ai',
+        // javascriptMode: JavascriptMode.unrestricted,
+        // onWebViewCreated: (WebViewController controller) {
+        //   this.controller = controller; // ➍ 위젯에 컨트롤러 저장
+        // },
       ),
     );
   }
