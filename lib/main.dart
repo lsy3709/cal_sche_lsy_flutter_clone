@@ -1,31 +1,34 @@
-import 'package:calendar_scheduler_lsy/screen/root_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:calendar_scheduler_lsy/screen/home_screen.dart';
-import 'package:calendar_scheduler_lsy/const/colors.dart';
-import 'package:calendar_scheduler_lsy/screen/root_screen.dart';
-
-import 'const/colors.dart';
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(
     MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: backgroundColor,
-        sliderTheme: SliderThemeData(  // Slider 위젯 관련
-          thumbColor: primaryColor,    // 동그라미 색
-          activeTrackColor: primaryColor,  // 이동한 트랙 색
-
-          // 아직 이동하지 않은 트랙 색
-          inactiveTrackColor: primaryColor.withOpacity(0.3),         ),
-        // BottomNavigationBar 위젯 관련
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          selectedItemColor: primaryColor,     // 선택 상태 색
-          unselectedItemColor: secondaryColor, // 비선택 상태 색
-          backgroundColor: backgroundColor,    // 배경 색
-        ),
+      theme: ThemeData(  // ➊ 테마를 지정할 수 있는 클래스
+          fontFamily: 'sunflower',  // 기본 글씨체
+          textTheme: TextTheme(     // ➋ 글짜 테마를 적용할 수 있는 클래스
+            displayLarge: TextStyle(   //  headline1 스타일 정의
+              color: Colors.white,  //  글 색상
+              fontSize: 80.0,       //  글 크기
+              fontWeight: FontWeight.w700, //  글 두께
+              fontFamily: 'parisienne',    //  글씨체
+            ),
+            displayMedium: TextStyle(
+              color: Colors.white,
+              fontSize: 50.0,
+              fontWeight: FontWeight.w700,
+            ),
+            bodyLarge: TextStyle(
+              color: Colors.white,
+              fontSize: 30.0,
+            ),
+            bodyMedium: TextStyle(
+              color: Colors.white,
+              fontSize: 20.0,
+            ),
+          )
       ),
-      home: RootScreen(),
+      home: HomeScreen(),
     ),
   );
 }

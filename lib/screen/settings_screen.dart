@@ -1,8 +1,6 @@
 import 'package:calendar_scheduler_lsy/const/colors.dart';
 import 'package:flutter/material.dart';
 
-import '../const/colors.dart';
-
 class SettingsScreen extends StatelessWidget {
   final double threshold;  // Slider의 현잿값
 
