@@ -1,15 +1,16 @@
+import 'package:calendar_scheduler_lsy/screen/home_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(
-    SplashScreen(),
-  );
+  // runApp(SplashScreen());
+  runApp(MaterialApp(home: HomeScreen()));
 }
 
 class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Container(
           decoration: BoxDecoration(
